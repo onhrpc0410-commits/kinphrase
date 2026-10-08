@@ -397,5 +397,7 @@ function draw() {
 document.querySelectorAll('.nav button').forEach(b => b.onclick = () => { tab = b.dataset.tab; if (tab === 'lists') openList = null; draw(); });
 draw();
 /* ピンチ・ダブルタップによる拡大を無効化 */
-[
+['gesturestart', 'gesturechange', 'gestureend'].forEach(ev => document.addEventListener(ev, e => e.preventDefault()));
+document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+</script>
 </body></html>
