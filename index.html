@@ -1,0 +1,399 @@
+<title>金のフレーズ 単語帳</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap">
+<style>
+/* Layout: one-screen phone app. Scrolling content area above a bottom tab bar; the test card fills the middle. */
+:root{
+  --bg:#f2f5f7; --surface:#ffffff; --ink:#14202b; --muted:#5b6a77; --line:#dce3e9;
+  --accent:#c9971c; --accent-ink:#7d5a07; --on-accent:#1b1405; --accent-soft:#f6ecd0;
+  --good:#1d8456; --good-soft:#dcf1e6; --bad:#c2402b; --bad-soft:#fae1dc;
+  --font-body:'Noto Sans JP','Hiragino Kaku Gothic ProN','Yu Gothic',Meiryo,system-ui,sans-serif;
+  --font-en:'Source Serif 4',Georgia,'Times New Roman',serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f151b; --surface:#18212a; --ink:#e8edf1; --muted:#97a5b1; --line:#2a3641;
+  --accent:#e0b04a; --accent-ink:#e6bd62; --on-accent:#1b1405; --accent-soft:#2c2614;
+  --good:#4cc38a; --good-soft:#15291f; --bad:#ef7a67; --bad-soft:#321b17; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f151b; --surface:#18212a; --ink:#e8edf1; --muted:#97a5b1; --line:#2a3641;
+  --accent:#e0b04a; --accent-ink:#e6bd62; --on-accent:#1b1405; --accent-soft:#2c2614;
+  --good:#4cc38a; --good-soft:#15291f; --bad:#ef7a67; --bad-soft:#321b17; color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.55;-webkit-tap-highlight-color:transparent;overflow:hidden}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#app{height:100%;display:flex;flex-direction:column;max-width:560px;margin:0 auto}
+#main{flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px;overscroll-behavior:contain}
+.bar{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+h1{font-size:19px;margin:0;font-weight:700;letter-spacing:.02em}
+h1 small{font-size:12px;font-weight:500;color:var(--muted);margin-left:8px}
+h2{font-size:13px;margin:0;color:var(--muted);font-weight:700;letter-spacing:.08em}
+.nav{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);background:var(--surface);padding-bottom:env(safe-area-inset-bottom,0px)}
+.nav button{background:none;border:0;padding:11px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);font-size:12px;font-weight:500;min-height:56px}
+.nav button svg{width:22px;height:22px}
+.nav button[aria-current="page"]{color:var(--accent-ink);font-weight:700}
+.nav button[aria-current="page"] svg{stroke:var(--accent)}
+
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label,.lbl{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.06em}
+input[type=text],input[type=number],input[type=search],select{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:11px 12px;min-height:46px;font-size:16px}
+input::placeholder{color:var(--muted)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:11px 16px;min-height:46px;font-weight:700}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.small{min-height:36px;padding:6px 12px;font-size:13px;border-radius:8px}
+.btn:disabled{opacity:.45}
+.row{display:flex;gap:10px;align-items:center;min-width:0}
+.row>*{min-width:0}
+.grow{flex:1}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.seg button{background:none;border:0;padding:10px 6px;min-height:44px;font-weight:500;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent-ink);font-weight:700}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px;min-height:36px;font-size:13px}
+.chip[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+
+/* word rows */
+.words{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
+.w{display:grid;grid-template-columns:3.2rem 1fr auto;gap:10px;align-items:start;padding:12px 12px 12px 8px;border-top:1px solid var(--line)}
+.w:first-child{border-top:0}
+.w .no{font-variant-numeric:tabular-nums;font-weight:700;font-size:17px;color:var(--accent-ink);text-align:right;padding-top:1px}
+.w .en{font-family:var(--font-en);font-weight:600;font-size:19px;line-height:1.3;overflow-wrap:anywhere}
+.w .ja{color:var(--muted);font-size:14px;margin-top:2px}
+.w .acts{display:flex;gap:6px}
+.icon-btn{background:none;border:1px solid var(--line);border-radius:8px;width:38px;height:38px;display:grid;place-items:center;color:var(--muted)}
+.icon-btn svg{width:18px;height:18px}
+.icon-btn[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent-ink);border-color:var(--accent)}
+.note{color:var(--muted);font-size:13px}
+.empty{padding:28px 12px;text-align:center;color:var(--muted)}
+.count{font-variant-numeric:tabular-nums}
+
+/* list cards */
+.lcard{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:13px 14px;min-height:56px}
+.lcard .nm{font-weight:700;overflow-wrap:anywhere}
+.lcard .ct{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px;white-space:nowrap}
+
+/* test */
+.stats{display:flex;align-items:center;gap:10px;font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted)}
+.prog{flex:1;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.prog i{display:block;height:100%;background:var(--accent);width:0;transition:width .2s}
+.stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:6px 0}
+.card{position:relative;width:100%;max-height:100%;min-height:min(60vh,380px);background:var(--surface);border:1px solid var(--line);border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:28px 20px;text-align:center;touch-action:pan-y;user-select:none;-webkit-user-select:none;transition:transform .2s ease;box-shadow:0 6px 24px rgba(0,0,0,.06)}
+.card .cno{position:absolute;top:14px;left:16px;font-size:13px;font-weight:700;color:var(--accent-ink);font-variant-numeric:tabular-nums}
+.card .cen{font-family:var(--font-en);font-weight:600;font-size:clamp(34px,11vw,52px);line-height:1.15;overflow-wrap:anywhere}
+.card .cja{font-size:20px;font-weight:500;line-height:1.6;min-height:3.2em;display:flex;align-items:center;justify-content:center}
+.card .tap{color:var(--muted);font-size:13px}
+.card .ov{position:absolute;inset:0;border-radius:18px;display:flex;align-items:flex-start;padding:14px 22px;font-weight:700;font-size:44px;line-height:1;opacity:0;pointer-events:none}
+.card .ov.r{background:var(--good-soft);color:var(--good);justify-content:flex-start}
+.card .ov.l{background:var(--bad-soft);color:var(--bad);justify-content:flex-end}
+.ans{display:grid;grid-template-columns:1fr auto 1fr;gap:10px}
+.ans .btn{min-height:54px;font-size:15px}
+.ans .no,.ans .yes{font-size:24px;line-height:1}
+.ans .no{color:var(--bad);border-color:var(--bad)}
+.ans .yes{color:var(--good);border-color:var(--good)}
+.big{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums;font-family:var(--font-en)}
+.sum{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sum div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.sum .good{color:var(--good)}.sum .bad{color:var(--bad)}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;z-index:10}
+.sheet{width:100%;max-width:560px;background:var(--surface);border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;max-height:80%;overflow-y:auto}
+.toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font-size:13px;z-index:20;max-width:90%}
+@media (prefers-reduced-motion:reduce){.card,.prog i{transition:none}}
+</style>
+
+<div id="app">
+  <div id="main"></div>
+  <nav class="nav" aria-label="メニュー">
+    <button data-tab="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>検索</button>
+    <button data-tab="test"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>テスト</button>
+    <button data-tab="lists"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>リスト</button>
+  </nav>
+</div>
+<div id="layer"></div>
+
+<script>
+const W = [["anyway","とにかく、それはそうと"],["following","〜に続いて、次の、以下の"],["refer","参照する、言及する、（人を）紹介する"],["employee","従業員、社員"],["offer","申し出る、提供する、申し出"],["likely","おそらく、〜しそうだ"],["provide","提供する、供給する"],["available","入手できる、利用できる、手があいている"],["conference","会議"],["purchase","購入する、購入（品）"],["include","含む"],["department","部門、売り場"],["contact","連絡する、連絡先"],["according to","〜によれば、〜に従って"],["client","顧客、依頼人、クライアント"],["review","見直す、再検討する、レビューする"],["indicate","示す、指摘する"],["attend","出席する、参加する"],["hire","雇う、採用者"],["local","地元の、地元の住民"],["repair","修理する、修理"],["article","記事、品物、（同種の物の）1つ"],["update","更新する、最新情報"],["advertise","宣伝する、広告する"],["equipment","機器、装備"],["increase","増える、増やす、増加"],["opening","空き、開店"],["ship","出荷する、発送する"],["expect","予期する、期待する"],["recently","最近"],["delivery","配達（物）、話し方"],["supply","供給（量）、必需品、供給する"],["feature","特徴にする、特集する、特徴"],["require","必要とする、要求する"],["process","処理する、過程、プロセス"],["construction","建設"],["charge","請求する、料金、責任"],["material","材料、資料、生地"],["survey","アンケート調査、調査、調査する"],["submit","提出する"],["create","創造する、作り出す"],["budget","予算、予算に組み込む"],["appointment","約束、予約、任命、指名"],["additional","追加の"],["application","応募、申請、応募書類、応用、アプリ"],["production","生産、作品、制作（物）"],["fee","料金"],["recommend","勧める、推薦する"],["award","賞、授与する"],["delay","遅らせる、遅れ、遅延"],["policy","規定、方針、保険証券、政策"],["industry","産業、業界"],["contract","契約、契約する"],["facility","施設"],["payment","支払い"],["detail","詳細、詳細に述べる"],["concern","懸念、懸念させる"],["option","選択肢、オプション"],["annual","年に1度の、毎年の"],["suggestion","提案"],["confirm","確認する"],["note","注意する、メモ、書き留める"],["package","小包、一式"],["document","文書、書類、記録する"],["mail","郵送する、郵便（物）"],["extra","追加の、余分な"],["firm","会社、企業、堅い、断固とした"],["public","公の、一般の人"],["located","位置している、（場所に）ある"],["broadcast","放送する、放送"],["management","経営、管理"],["resource","資源、財源、（教育）資料"],["base","拠点にする、拠点、基礎、土台"],["currently","現在"],["rate","割合、料金、評価する"],["financial","財政の、財務の、金融上の"],["consider","（よく）考える、検討する"],["install","設置する、インストールする"],["allow","許す"],["colleague","同僚"],["arrange","手配する、きちんと並べる"],["reduce","減らす、下げる"],["replace","交換する、取って代わる、後任となる"],["register","登録する、レジ"],["focus","集中させる、焦点を合わせる、焦点"],["proposal","提案、提案書"],["introduce","導入する、紹介する"],["prefer","〜をより好む"],["promote","昇進させる、促進する"],["opportunity","機会、チャンス"],["clothing","衣類、衣料品"],["exhibit","展示する、（作品などを）展示する、展示（物）"],["property","財産、不動産、所有物、資産、特性"],["expand","拡大する、膨張する"],["host","主催する、司会を務める、主催者、主人"],["reserve","予約する、確保する"],["pleased","喜んだ、満足して、うれしい"],["instruction","指示、取り扱い説明書"],["latest","最新の"],["bill","請求書、勘定書、請求する"],["development","開発、成長、発展、開発地"],["accounting","会計、経理"],["benefit","利益、恩恵、役立つ"],["rent","家賃、賃借する、賃貸しする"],["agency","代理店、機関"],["upcoming","今度の、間近に迫った"],["accept","受け入れる、受け取る、引き受ける"],["representative","代表者、担当者、代表する"],["author","著者、作家、（本などを）書く"],["deadline","締め切り、（最終）期限"],["resident","住民"],["candidate","候補者"],["organize","組織する、手配する、整理する"],["laboratory","研究所、実験室"],["release","発表する、公開する、発売する、発表、発売"],["conduct","実行する、実施する、振る舞い"],["participate","参加する"],["corporate","企業の、法人の、会社の"],["feedback","意見、感想、フィードバック"],["committee","委員会"],["advance","前進、進歩、前進する、進める"],["encourage","奨励する、勧める、促進する"],["approve","承認する、賛成する"],["expense","費用、経費"],["renovation","改装、改修"],["excellent","素晴らしい、卓越した、優秀な"],["fund","資金を提供する、資金、基金"],["operate","操作する、運営する、作動する"],["resume","再開する"],["reschedule","スケジュールを変更する"],["describe","説明する、描写する"],["inform","知らせる"],["volunteer","ボランティア、自発的な、進んで〜する"],["executive","重役、幹部、重役の、役員の"],["transportation","輸送、交通機関、交通手段、運賃"],["branch","支店、支社、支部、分校、枝"],["refund","返金、払い戻し、返金する"],["successful","成功した、好結果の"],["merchandise","商品"],["remind","思い出させる、気付かせる"],["estimate","見積もる、見積もり"],["launch","開始する、発売する、開始、発売"],["appreciate","感謝する、高く評価する"],["track","追跡する、線路、プラットホーム、記録"],["unfortunately","残念ながら、あいにく"],["editor","編集者"],["previous","以前の、前の"],["commercial","商業的な、商業用の、CM"],["reference","参照、推薦状、照会先"],["invitation","招待、招待状"],["original","元の、最初の、オリジナルの、原本"],["selection","選択、品揃え、選抜"],["attract","引きつける、魅了する"],["handle","扱う、対処する、手で触れる、取っ手"],["memo","メモ、社内連絡文書"],["attach","添付する、取り付ける"],["correct","正確な、正しい、訂正する"],["council","議会、会議"],["suppose","〜することになっている、〜だと思う"],["regular","定期的な、通常の"],["quarter","四半期、4分の1"],["respond","返答する、反応する"],["manufacturer","製造業者、メーカー"],["cause","原因、理由、引き起こす"],["device","装置、機器"],["warehouse","倉庫"],["contain","含む、入っている"],["individual","個人の、個々の、個人"],["permit","許可する、許可証"],["transfer","転勤させる、移動させる、転勤、移動"],["task","任務、仕事、課題"],["intend","意図する、〜するつもりである"],["directly","直接"],["brochure","パンフレット、小冊子"],["competition","競争、コンテスト、競争相手"],["limited","限られた、有限の"],["consumer","消費者"],["procedure","手順、手続き"],["potential","潜在的な、可能性"],["downtown","中心街の、中心街へ、中心街"],["headquarters","本社、本部"],["further","さらに、さらに遠くに、さらに進んだ"],["assistance","援助、支援"],["distribute","分配する、配布する、流通させる"],["raise","上げる、育てる、集める、昇給"],["impress","印象づける、感動させる"],["seek","探し求める、〜しようとする"],["region","地域、地方"],["apologize","謝罪する"],["cafeteria","食堂、カフェテリア"],["solution","解決策、解決"],["range","範囲、範囲に及ぶ"],["luggage","手荷物"],["avoid","避ける"],["effective","効果的な、有効な"],["entire","全体の、全部の"],["investment","投資"],["general","全般的な、一般的な"],["degree","程度、学位、度"],["crew","乗組員、スタッフ、グループ"],["comfortable","快適な、心地よい、自信が持てる"],["search","探す、検索、捜索、探す、検索する"],["photography","写真撮影"],["maintain","維持（管理）する、主張する"],["demand","需要、要求、要求する"],["involve","巻き込む、伴う、含む"],["improvement","改良、改善"],["postpone","延期する"],["advise","勧める、助言する、忠告する"],["obtain","得る、手に入れる"],["immediately","すぐに、ただちに"],["electronic","電子の"],["highly","非常に、とても、（評価で）高く"],["deal","取引、量、対処する、扱う"],["regarding","〜に関する、〜について"],["determine","決定する、判断する、決心する"],["complaint","苦情、不満"],["division","部門、分割"],["retire","退職する、引退する"],["method","方法"],["agreement","契約（書）、合意"],["celebration","祝賀（会）"],["modern","現代の、近代的な、最新式の"],["standard","基準、水準、標準の"],["responsible","責任がある、原因である"],["enclose","同封する、囲む"],["specific","特定の、具体的な、特有の"],["renew","更新する"],["definitely","絶対に、間違いなく、もちろん"],["destination","目的地、行き先"],["district","地区"],["leading","第一流の、主要な"],["regulation","規則、規制"],["mayor","市長、町（村）長"],["ability","能力"],["temporary","臨時の、一時的な"],["architect","建築家"],["affect","影響する"],["efficient","効率的な"],["statement","明細書、声明、発言"],["tip","ヒント、助言、コツ、チップ、先端"],["admission","入場（料）、入会（費）"],["arrival","到着"],["profit","利益"],["complex","複合施設、複雑な"],["insurance","保険"],["guarantee","保証する、保証"],["finalize","仕上げる、最終決定する、完結させる"],["related","関連した"],["entry","参加（者）、入場（入り口）、入力"],["establish","設立する、創立する、確立する"],["recognize","認める、称える、識別する"],["demonstrate","実演する、示す、証明する"],["landscaping","造園"],["tax","税金"],["grant","助成（補助）金、与える、認める"],["earn","得る、もたらす、稼ぐ"],["full-time","常勤の、フルタイムの"],["deposit","頭金、敷金、保証金、預金する"],["monitor","監視する、モニター、ディスプレイ"],["journal","専門誌"],["reward","報奨、褒美、報いる"],["status","状況、地位"],["nearly","ほとんど、もう少しで"],["approach","やり方、接近、近づく"],["content","中身、内容、満足して"],["flyer","チラシ、（旅客機の）利用者"],["automobile","自動車"],["frequently","頻繁に"],["various","さまざまな"],["electric","電気の、電動の"],["particular","特定の、好みがうるさい"],["legal","法律の、法律上の、合法の"],["willing","〜しても構わない、〜する気がある"],["properly","適切に、きちんと"],["claim","請求（金）、主張、請求する、主張する"],["drawing","抽選（会）、くじ引き、デッサン、線画"],["flavor","香味、風味、味付けをする"],["graduate","卒業生、卒業する"],["familiar","よく知っている、よく知られた"],["exactly","正確に"],["ideal","理想的な、理想"],["neighborhood","近所、（人々が住む）地域、近隣"],["traditional","伝統的な、昔ながらの"],["explore","探索する、調べる、調査する"],["appropriate","適切な"],["departure","出発、逸脱"],["quantity","数量、量"],["minimum","最低限（の）、最小限（の）"],["identify","特定する"],["satisfied","満足した"],["environmental","環境の、環境保護の"],["former","元の、以前の、かつての、前者"],["decade","10年間"],["mostly","ほとんど、主に"],["initial","最初の、初めの、頭文字"],["significant","かなりの、重要な"],["educational","教育の"],["decline","（丁寧に）断る、減少する、減少"],["preparation","準備、支度、調理"],["suitable","適した、ふさわしい"],["priority","優先（事項）"],["brief","短い、簡潔な、概要、要旨を伝える"],["reasonable","（値段などが）手頃な、妥当な"],["setting","設定、環境"],["forecast","予報、予測、予報する、予測する"],["fuel","燃料、給油する、（感情を）あおる"],["campus","敷地、（大学などの）キャンパス"],["found","設立する、創立する、創設する"],["agricultural","農業の"],["donation","寄付"],["anniversary","記念日"],["clerk","事務員、（ホテルの）受付係、店員"],["aware","気づいている、承知している"],["progress","進行、前進、進歩、進む"],["overall","全体的な、全体の、全体として"],["delighted","大いに喜んで"],["emphasize","強調する"],["vote","投票する、投票（数）"],["worth","価値がある、〜する価値がある"],["cooperation","協力"],["structure","構造、建造物"],["combine","組み合わせる、結びつける、併せ持つ"],["automatically","自動的に、自動で"],["contribute","貢献する、寄付する、寄稿する、一因となる"],["institute","（特定の分野の）機関、研究所、協会、設ける"],["completely","完全に、すっかり"],["achieve","達成する"],["function","機能、機能する"],["duty","義務、職務、関税"],["fare","運賃、（レストランの）料理"],["prevent","防ぐ、妨げる"],["confident","自信がある、確信している"],["enable","可能にする"],["athletic","運動競技の、運動選手の、運動神経が発達した"],["impact","影響、影響を与える"],["gain","得る、増す、権利、利益"],["locate","置く、（場所を）見つける"],["background","経歴、背景"],["shortly","すぐに、まもなく、少し"],["diet","食事、日常の食物"],["income","収入、所得"],["proof","証拠、証明"],["occasion","行事、機会、時、場合"],["measure","測る、評価する、対策、手段、基準"],["basis","基準、基礎"],["occur","起こる、生じる"],["complicated","複雑な"],["absolutely","完全に、絶対に"],["emergency","緊急時、非常事態"],["analyze","分析する"],["physical","物理的な、身体の、健康診断"],["praise","褒める、称賛する、賞賛"],["observe","観察する、気づく、順守する"],["reputation","評判"],["aspect","側面"],["appearance","外見、出現、出演"],["accompany","同行する、伴う、伴奏する"],["generous","寛大な、気前の良い、物惜しみしない"],["labor","労働（者）"],["valuable","価値のある、貴重な"],["extremely","非常に、きわめて、とても"],["soil","（植物が育つ）土、土壌"],["relatively","比較的"],["appeal","魅力、（心に）訴える、興味を引く"],["eager","熱望している"],["storm","嵐、暴風雨（雪）"],["lack","不足、欠如、欠いている"],["essential","不可欠の、極めて重要な、本質的な"],["reflect","反射する、映す、熟考する"],["surrounding","周囲の、周辺の"],["afterward(s)","あとで、そのあと"],["closely","密接に、注意深く"],["permanent","常設の、永続的な、終身の"],["deserve","値する"],["existing","既存の"],["regret","残念（遺憾）に思う、後悔する"],["treatment","治療、処理、扱い、待遇"],["dozen","12の、ダース、12個、ダース"],["proceed","進む、続ける"],["connection","接続、つながり、関係、乗り継ぎ"],["rush","大急ぎでする、急ぐ、突進、混雑"],["preserve","保存する、保護する、（動物などの）保護区"],["crop","農作物、収穫物"],["aim","目的とする、向ける、目的、狙い"],["normally","通常は、いつもは"],["attempt","試み、試みる"],["factor","要因、要素"],["election","選挙"],["promising","前途有望な、見込みのある"],["accurate","正確な"],["finding(s)","調査（研究）結果、発見（物）"],["slightly","わずかに、少し"],["native","出生地の、母国の、自生の、〜生まれの人"],["economic","経済（上）の"],["settle","解決する、落ち着く、決める"],["practical","実用的な、現実的な、実際的な"],["scholarship","奨学金"],["import","輸入する、輸入（品）"],["atmosphere","雰囲気、大気（圏）"],["supervisor","上司、監督者、管理者"],["storage","保管、貯蔵"],["invoice","請求書"],["associate","関連づける、社員"],["revise","修正する、改訂する、見直す"],["appliance","電化製品、器具"],["ensure","確実にする、保証する"],["catering","ケータリング"],["inventory","在庫、棚卸し"],["warranty","保証（書）"],["specialize","専門にする"],["retail","小売り"],["strategy","戦略"],["consult","相談する、（本などを）調べる"],["beverage","飲み物、飲料"],["notify","知らせる、通知する"],["agenda","議題、協議事項、アジェンダ"],["trail","跡、小道"],["subscription","サブスク、定期購読、定期購読料"],["vendor","販売業者、露天商"],["inspection","検査、視察"],["grocery","食料雑貨（店）"],["fabric","生地、織物"],["paperwork","書類作業"],["personnel","スタッフ、職員、人事"],["inquire","問い合わせる、尋ねる"],["experienced","経験豊富な"],["lease","賃貸借契約、リース（契約）、賃貸借する"],["multiple","複数の、多数の"],["assign","割り当てる、任命する"],["recruit","採用する、募集する、新人"],["banquet","宴会、晩餐会"],["venue","会場、開催地"],["complimentary","無料の、称賛する"],["conclude","結論づける、終わる、終える"],["sculpture","彫刻"],["in-person","直接の、対面の"],["relocate","移転させる、移転する、引っ越す"],["ingredient","材料、成分"],["anticipate","予期する、予想する"],["extension","延長、内線"],["contractor","請負業者"],["certificate","証明書、修了証"],["expire","期限が切れる"],["assembly","組み立て、集会"],["eligible","資格がある"],["hardware","金物類、コンピューターのハードウェア"],["itinerary","旅程"],["highlight","強調する、ハイライト、見どころ"],["payroll","給与（支払い）"],["affordable","手頃な"],["administrative","管理の"],["enroll","登録する、入会（入学）する"],["innovative","革新的な"],["exceed","超える"],["valid","有効な"],["refreshments","軽い飲食物"],["merge","合併する"],["craft","工芸（品）、職人技、手作りする"],["alter","変える、変更する"],["historic","歴史上重要な、歴史のある"],["negotiate","交渉する"],["qualified","適任の、資格のある"],["receptionist","受付係"],["pickup","引き取り、乗車、引き取ること"],["evaluate","評価する"],["remodel","改築する、リフォームする"],["patron","常連客、後援者"],["generate","生み出す"],["overnight","一晩の、翌日配送の、一晩"],["revenue","収入、収益"],["summary","要約、概要"],["questionnaire","アンケート（用紙）"],["tourism","観光（業）"],["prior","前の、事前の"],["household","家庭の、世帯の"],["acquire","買収する、得る"],["pharmacy","薬局"],["oversee","監督する"],["outline","概要、輪郭、要点を述べる"],["approximately","およそ"],["productivity","生産性"],["outstanding","傑出した、未払いの"],["implement","実行する、導入する"],["publicity","宣伝、広告、注目、評判"],["aisle","通路"],["auditorium","講堂、観客席"],["capacity","容量、収容能力、能力、役割"],["laundry","洗濯（物）"],["fund-raising","資金集め（の）、慈善活動"],["predict","予測する、予言する"],["reopen","再開する、再オープンする"],["machinery","機械（類）"],["dealership","販売代理店、正規ディーラー"],["hallway","廊下"],["initiative","（新たな）取り組み、新計画、主導権"],["talented","才能のある"],["via","〜を通って、〜経由で"],["resolve","解決する"],["undergo","（検査などを）受ける、経験する"],["packet","書類一式、小さな包み"],["biography","伝記、経歴"],["engage","従事する、従事させる、携わる、関わり合う"],["inspire","着想をもたらす、鼓舞する"],["relevant","関連がある"],["alert","注意を喚起する、気づかせる、警告、アラート"],["tenant","（部屋や家、ビルなどの）居住者、賃借人"],["coverage","報道、（保険の）補償（範囲）、取扱範囲"],["aircraft","航空機"],["restore","回復させる、修復する、復元する"],["primarily","主に、第一に"],["typically","通常は、一般的に、典型的に"],["reliable","信頼できる、頼りになる"],["quote","見積もり、見積もり額、見積もる"],["overtime","残業、時間外に"],["manuscript","原稿"],["recipient","受取人、受賞者"],["wildlife","野生動物"],["flexible","柔軟な、融通の利く"],["transaction","取引"],["numerous","数多くの"],["motivate","やる気にさせる、動機を与える"],["dedicated","献身的な、特化した、専用の"],["enhance","高める、向上させる"],["commute","通勤（時間）、通勤（通学）する"],["coordinate","調整する、まとめる、コーディネイトする"],["phase","段階"],["accessible","行きやすい、入れる、入手できる、利用できる"],["accommodation(s)","宿泊施設、宿泊"],["equip","備え付ける、装備する、身につけさせる"],["exceptional","非常に優れた、例外的な"],["long-term","長期の"],["challenging","（大変だが）やりがいのある"],["county","郡"],["hesitate","ためらう"],["routine","いつもの、お決まりの、日課"],["protective","保護用の"],["input","意見、情報、入力、入力する"],["expo","（大規模な）展示会、博覧会"],["mechanical","機械の"],["comprehensive","総合的な、包括的な"],["prescription","処方箋"],["acknowledge","（受領を）知らせる、認める"],["authorized","公認の、権限を与えられた"],["usage","使用法、使い方、（言葉の）語法"],["disappointed","がっかりした、失望した"],["reveal","明らかにする"],["outlet","（割引）直売店、コンセント"],["utility","公共サービス、公共事業"],["substantial","かなりの、丈夫な"],["internal","内部の、社内の"],["loyal","忠実な"],["cookware","調理器具"],["boost","押し上げる、高める、増加、促進"],["knowledgeable","知識の豊富な、精通している"],["committed","真剣に取り組んでいる、献身的な"],["commission","委員会、歩合"],["timeline","予定表、スケジュール表"],["souvenir","記念品、お土産"],["exclusive","独占的な、専用の、高級な"],["exterior","外部の、外観"],["tune","チャンネルを合わせる、調整する"],["assure","保証する、請け合う"],["recall","回収する、思い出す、回収"],["conflict","対立、衝突、予定の重複"],["patience","忍耐、根気"],["sightseeing","観光"],["gear","器具、道具、用品"],["thrilled","とても興奮して、わくわくして"],["transition","移行、転換"],["mission","任務、使命、目標"],["tailor","（個人のニーズなどに）合わせる、仕立てる"],["nutrition","栄養（摂取）、栄養学"],["outdated","時代遅れの、旧式の"],["reject","却下する、拒絶する、不採用にする"],["component","部品、構成要素"],["urban","都市の、都会の"],["adjustment","調整"],["promptly","迅速に、時間通りに、ちょうどに"],["accomplished","熟練した、見事な"],["forum","フォーラム、討論会"],["domestic","国内の、家庭の"],["round-trip","往復の"],["calculate","計算する"],["popularity","人気"],["remote","遠く離れた、人里離れた、リモートの"],["encounter","遭遇する、出会う、遭遇"],["convert","（別の形に）変える、転換する"],["videoconference","ビデオ会議、テレビ会議"],["postal","郵便の"],["prohibit","禁止する"],["assess","評価する、査定する"],["clarify","明確にする、わかりやすくする"],["independent","独立した"],["urgent","急ぎの、緊急の"],["skilled","熟練した、上手な"],["remark","発言、意見、意見を述べる"],["weekday","平日"],["personalized","個人に合わせた、名前（イニシャル）入りの"],["stain","シミ、汚れ、汚す"],["pursue","追求する、追い求める"],["seasonal","季節の、季節的な"],["presence","存在（感）、出席"],["portion","部分、一部、（食べ物の）1盛り、1人前"],["retain","維持する、保持する、保存する"],["visible","目に見える"],["thoroughly","徹底的に、完全に"],["belongings","所持品、所有物"],["paycheck","給料、給与支払小切手"],["delete","削除する"],["dairy","牛乳から作られる、酪農（業）の、乳製品"],["collaborate","協力する、コラボする"],["stream","（ストリーミング）配信する、小川、連続"],["consist","構成されている、成る"],["assume","引き受ける、（根拠なしに）思う、想定する"],["profession","（高度で専門的な）職業"],["crucial","きわめて重要な、必須の"],["entitle","権利を与える、タイトルを付ける"],["enlarge","拡張する、拡大する"],["partnership","提携、協力関係"],["scratch","ひっかき傷をつける、ひっかき傷"],["compensation","報酬、補償、埋め合わせ"],["steady","安定した、着実な、一定の"],["enthusiastic","熱心な、熱意のある、乗り気である"],["emerging","新興の、新進の"],["differ","異なる"],["critical","きわめて重要な、重大な、批判的な"],["physician","医師"],["consistently","常に、一貫して、いつも"],["sector","（国の経済活動の）部門、分野"],["workload","仕事量"],["fulfill","満たす、果たす、実現する"],["cite","（理由や例として）挙げる、引き合いに出す"],["diverse","多様な"],["hopefully","できれば、願わくば"],["lately","最近、近頃"],["brand-new","新品の、真新しい"],["informal","非公式の、形式ばらない"],["shortage","不足"],["portrait","肖像画"],["fairly","かなり、公平に"],["disturb","邪魔をする"],["modify","修正する、変更する"],["transform","一変させる"],["eliminate","取り除く、排除する"],["removal","除去、撤去"],["ownership","所有権、所有者（オーナー）であること"],["interact","交流する"],["sufficient","十分な"],["eventually","最終的に、ついに、結局"],["strive","（懸命に）努力する"],["circumstance","状況"],["adapt","順応する、適合させる、改作する"],["luxury","高級（品）、豪華さ、ぜいたく（品）"],["surprisingly","驚くほど"],["suspend","一時停止する、つるす"],["statistics","統計（値）、統計学"],["poll","世論調査、アンケート調査、世論調査をする"],["resign","辞任する、辞職する"],["gratitude","感謝"],["exposure","さらすこと、露出"],["housekeeping","（ホテルの）客室清掃、家事"],["vacant","空いている"],["premise","敷地、前提"],["owe","おかげである、借りている"],["ease","簡単さ、和らげる"],["urge","強く勧める"],["kindly","どうか、親切に"],["artificial","人工の"],["illustrate","（図表や実例で）説明する、イラストを描く、証明する"],["accordingly","それに応じて、したがって"],["restrict","制限する"],["substitute","代わりをつとめる、代わりに用いる、代用品、代理"],["favorable","好意的な、好ましい"],["asset","財産、資産"],["manner","やり方、方法、態度"],["relief","安心、安堵"],["occupied","（部屋や席などが）使用中の、忙しい"],["alike","同様に、似ている"],["heavily","大量に、大いに、激しく"],["outcome","結果、成果"],["persuade","説得する、説得して〜させる、納得させる"],["confusing","わかりにくい、紛らわしい、混乱させるような"],["dispose","処分する"],["prominent","有名な、目立った、傑出した"],["faculty","（大学の）教員、学部"],["in-house","社内の、組織内の、社内で、組織内で"],["rapidly","急速に"],["investigate","調査する、研究する"],["apparently","どうやら〜らしい、多分、見たところ"],["capture","とらえる"],["adequate","十分な"],["separately","別々に、別個に"],["rarely","めったに〜ない"],["concentrate","集中する"],["abandon","断念する、放棄する、見捨てる"],["objective","目的、目標、客観的な"],["partial","一部（分）の、部分的な"],["ambitious","野心的な"],["caution","用心、注意、警告、注意を与える"],["on-site","現地の、現場の、現地で、現場で"],["inconvenience","不便"],["mentor","相談相手、助言者、指導する、助言する"],["directory","（建物の）案内板、名簿"],["bin","（貯蔵用の大型の）容器、ごみ箱"],["expertise","専門知識、専門技術"],["renowned","有名な、高名な"],["prototype","試作品"],["showcase","披露する、お披露目の場、ショーケース"],["garment","衣服"],["plumbing","配管（設備）、配管工事、配管業"],["spokesperson","広報担当者"],["verify","（間違いがないかを）確認する、証明する"],["state-of-the-art","最新式の、最先端の"],["reimburse","払い戻す"],["cuisine","料理（法）"],["discontinue","生産をやめる、中止する"],["culinary","料理の、調理の"],["pottery","陶芸、陶器（類）"],["defective","欠陥のある、不完全な"],["portfolio","作品集、製品（サービス）一覧、有価証券（一覧）"],["browse","（店などで）見て回る、閲覧する、拾い読みする"],["pastry","（パイやケーキなどの）焼き菓子"],["durable","耐久性のある、長持ちする"],["disruption","混乱、中断"],["transit","輸送、交通機関"],["textile","繊維、織物、布地"],["landmark","（歴史的な）建物、名所、画期的な出来事"],["fleet","（同一会社の）保有車両、保有機体（船舶）"],["overview","概要、概観"],["slot","時間枠、投入口"],["leak","漏れ（穴）、漏れる、漏らす"],["projection","予測、映写"],["confidential","機密の、秘密の"],["lodging","宿泊（場所）"],["misplace","置き忘れる、置き間違える"],["voucher","引換券、クーポン券"],["compliance","（法令）順守"],["designate","指定する、指名する"],["freight","貨物（運送）"],["scenic","景色の良い"],["specification","仕様（書）、スペック"],["insight","洞察（力）、見識"],["bulk","大量、巨大なもの、大量の、大口の"],["medication","薬剤"],["compartment","仕切った部分"],["facilitate","促進する、容易にする、進行する"],["nationwide","全国的な、全国的に"],["shareholder","株主"],["informative","有益な、情報満載の"],["botanical","植物の"],["simplify","簡素（簡略）化する、簡単にする"],["compliment","ほめる、ほめ言葉、賛辞"],["premier","最高の、主要な"],["bid","入札、入札する"],["duration","（持続）期間"],["tuition","授業料"],["wholesale","卸（売）の、卸売り"],["ongoing","進行中の、継続している"],["blueprint","設計図"],["entrepreneur","起業家"],["acclaimed","高く評価されている、称賛されている"],["malfunction","故障、不調、故障する、正常に機能しない"],["restart","再起動する、再開させる"],["retreat","社員旅行、保養所"],["incorporate","取り入れる、組み入れる"],["spacious","広々とした、広い"],["closure","閉鎖、廃業"],["webinar","ウェブセミナー、オンラインセミナー"],["cardboard","段ボール、ボール紙"],["last-minute","間際の、土壇場の、直前の"],["hands-on","実地の、現場での、現場主義の"],["mandatory","必須の、義務の、強制の"],["checkup","健康診断、（医師による）検査"],["resistant","耐〜の、抵抗力のある"],["fragile","壊れやすい、もろい"],["dimension","寸法、次元"],["prospective","見込みのある、将来〜になりそうな"],["furnished","家具付きの"],["suite","スイートルーム、一続きの部屋"],["segment","区分、部分"],["activate","有効化する、起動させる"],["logistics","物流（管理）、（複雑な業務の）細部計画（調整）"],["managerial","管理（職）の、経営の"],["detergent","洗剤"],["solicit","求める、募る、訪問販売する"],["audit","会計監査、会計監査をする"],["preview","先行で見る、（印刷）プレビューで見る、プレビュー"],["proceeds","（活動やイベントの）収益"],["conservation","（自然環境の）保護、（文化財などの）保存"],["screening","上映、検査、選考"],["interruption","中断"],["discard","捨てる"],["introductory","入門の、導入の、発売特価の"],["sustainable","（環境に害を及ぼさずに）持続可能な"],["thrive","繁栄する、よく育つ"],["frustrated","いらいらしている、欲求不満を抱く"],["respectively","（述べられた順に）それぞれ"],["spectacular","壮観な、目を見張るような"],["compile","（1つに）まとめる、編集する"],["surplus","余剰、余分、黒字、余分の"],["prestigious","権威ある、名高い、一流の"],["instrumental","重要な役割を果たす、インストゥルメンタルの"],["congestion","渋滞、混雑"],["respected","評判の良い、立派な"],["incur","発生させる、こうむる、負う"],["lengthy","長時間の、長期にわたる、長々とした"],["convey","伝える、運搬する"],["resume","再開する"],["eatery","飲食店、レストラン"],["notable","注目すべき、著名な"],["boast","誇りにする、（誇るべきものを）持っている"],["tremendous","ものすごい、莫大な、素晴らしい"],["preliminary","予備の、事前の"],["surpass","上回る、超える"],["municipal","市（町）の、市（町）営の"],["criterion","基準（複 criteria）"],["excursion","（団体の）小旅行"],["texture","手触り、触感、食感"],["memorable","記憶に残る、忘れられない"],["courtyard","中庭"],["proficiency","高い運用能力、優れた技量、熟達"],["courteous","礼儀正しい"],["retrieve","取り戻す、回収する"],["lumber","材木、木材"],["fascinating","魅力的な"],["perspective","観点、見方"],["cutting-edge","最先端の"],["situated","（ある場所に）位置している、ある"],["perfume","香水、香り"],["comparable","同等の、似たような、匹敵する"],["utilize","利用する"],["correspond","やり取りする、一致する、相当する"],["quota","ノルマ、（生産、販売などの）割り当て"],["outing","（団体の）小旅行、遠足"],["flaw","欠陥"],["rigorous","厳格な、厳しい"],["recyclables","リサイクル可能な物"],["vital","不可欠の、きわめて重要な"],["undertake","引き受ける、着手する"],["seasoned","熟練した、経験豊富な、ベテランの、味付けした"],["overwhelming","圧倒的な"],["devoted","献身的な、専門に取り扱っている"],["shed","物置、小屋、取り除く、（葉を）落とす"],["outgoing","社交的な、出ていく、退任する"],["supplement","（別冊）付録、補足、サプリ、補う"],["fertilizer","肥料"],["withstand","耐える"],["authentic","本格的な、本場の、本物の"],["landlord","家主、大家、地主"],["refrain","控える"],["allocate","割り当てる、配分する"],["transcript","成績証明書、文字起こし"],["trustee","理事、管財人、受託者"],["adjacent","隣接した"],["novice","初心者、かけ出し、新米"],["subsidiary","子会社"],["periodic","定期的な、周期的な"],["assorted","詰め合わせの、盛り合わせの、雑多な"],["understaffed","人手不足の、人員不足の"],["modest","控えめな、適度の、質素な"],["accumulate","（時間をかけて少しずつ）ためる、蓄積する"],["consent","同意、合意"],["optimistic","楽観的な"],["intensive","（短期）集中的な"],["endeavor","努力、試み、努力する、試みる"],["adhere","忠実に従う、くっつく"],["dispatch","派遣する、発送する、派遣、発送、特派員報告"],["ample","十分な、十分すぎるほどの"],["protocol","手順、規約"],["unveil","公表する、明らかにする"],["artisan","職人、熟練工"],["top-notch","一流の、最高の"],["distraction","邪魔、気を散らすもの、気晴らし"],["autograph","（有名人の）サイン、（有名人が）サインする"],["influential","影響力のある"],["attribute","〜によるものだと考える、特質、特性"],["dominate","支配する、そびえ立つ"],["breakdown","内訳、明細、故障"],["sophisticated","（機械などが複雑で）高度な、精巧な、洗練された"],["outlook","見通し、展望、考え方"],["privilege","光栄、特権"],["remainder","残り"],["patent","特許、特許を取る"],["devise","考案する"],["subsequently","その後（に）"],["evenly","むらなく、均等に"],["moderate","適度な、中くらいの、和らげる、司会をする"],["humidity","湿度"],["tentative","仮の、暫定的な"],["compromise","妥協する、妥協"],["fraction","数分の一、ほんの一部、わずか"],["appraisal","査定、評価、鑑定"],["coincidence","偶然の一致"],["straightforward","簡単な、わかりやすい、率直な"],["interim","暫定的な、仮の、中間の"],["prime","最高の、最良の、主要な、最盛期"],["controversial","物議をかもす、議論を呼ぶ"],["acquaintance","知人、面識"],["transparent","透明な、（組織などが）透明性の高い"],["keynote","基調、基本方針"],["outage","停電（期間）、動力停止期間"],["expedite","早める、急ぐ"],["repave","再舗装する"],["artifact","人工遺物"],["tutorial","チュートリアル、個別指導"],["attire","服装"],["batch","（生産・処理の）1回分、1群"],["morale","士気、やる気"],["irrigation","かんがい"],["crate","木箱、ケース"],["detour","回り道、回り道をする"],["raffle","（慈善目的の）くじ"],["cubicle","（仕切られた）個人用スペース"],["redeem","（クーポン券などを）引き換える"],["stunning","驚くほど美しい、見事な"],["outreach","奉仕（福祉）活動"],["waive","免除する、適用しない、（権利を）放棄する"],["rafting","（ゴムボートでの）川下り"],["refill","再調剤、補充、補充する、再調剤する"],["sturdy","頑丈な"],["commemorate","（重要な出来事などを）祝う、記念する"],["plaque","盾、（記念）プレート"],["insulation","断熱（材）、防音（材）、絶縁（体）"],["itemize","項目に分ける、箇条書きにする"],["compatible","互換性のある"],["proofread","校正する"],["gala","祝賀（会）"],["inclement","（天気が）荒れ模様の"],["mural","壁画"],["centerpiece","中央に置く装飾品、目玉"],["endorsement","推薦、支持"],["credentials","資格、実績、証明書"],["debris","がれき、残骸"],["overdue","期限の過ぎた"],["reunion","同窓会、再会"],["feasible","実現（実行）可能な"],["kiosk","情報端末、売店"],["tow","レッカー移動する"],["streamline","合理化する"],["anecdote","逸話、エピソード"],["attest","証明する、証言する"],["intermission","休憩時間"],["obstruction","障害物"],["footage","映像"],["refurbish","改装する、修理調整する"],["sanitize","消毒する、衛生的にする"],["testimonial","推薦の声、推薦文"],["turnout","人出、参加者数、投票者数"],["drape","カーテン、掛け布、（布などで）覆う"],["errand","用事、使い走り"],["advocate","提唱者、支持者、提唱する、主張する"],["offset","相殺する、埋め合わせる、相殺するもの"],["high-profile","注目を集める、人目を引く"],["groundbreaking","画期的な、革新的な、着工式の、着工式"],["chronicle","年代順に記録する、年代記"],["carpool","（社員や学生同士の）相乗り、相乗りする"],["aspiring","〜の卵、〜志望の、意欲的な"],["entail","（必然的に）伴う"],["slate","予定させる"],["apprenticeship","見習いの身分、見習い期間"],["sizable","かなり大きな"],["vicinity","近所、付近"],["installment","（シリーズ物の）1回分、（分割払いの）1回分"],["perishable","（食べ物が）傷みやすい、腐りやすい"],["bustling","にぎわっている、活気のある"],["ventilation","風通し、換気"],["demolish","解体する、取り壊す"],["avid","熱心な"],["delegate","任せる、委譲する、代表"],["turnover","離職率"],["anonymous","匿名の"],["intact","無傷の"],["complement","補完する、補完するもの"],["reproduce","複製する、再現する、繁殖する"],["embark","乗り出す、開始する、乗船する"],["compelling","人を引きつける、説得力のある"],["consecutive","連続した"],["faucet","蛇口"],["imperative","絶対に必要な、必須の"],["inaugural","初回の、就任（式）の"],["rectangular","長方形の"],["ergonomic","人間工学に基づいた"],["bolster","強化する、高める、支える"],["landfill","（廃棄物の）埋立（地）"],["hone","磨きをかける、砥石で研ぐ"],["excavation","発掘、掘削"],["repurpose","転用する"],["upholstery","椅子張り用品、椅子張り業"],["effortlessly","楽々と、苦もなく"],["lucrative","利益の上がる、もうかる"],["versatile","多才な、万能の"],["intuitive","直感的に使える、直感的な"],["sequel","続編"],["replenish","補充する、補給する"],["commensurate","相応の、釣り合った、見合った"],["onboarding","新人研修、オンボーディング"],["resilience","回復力"],["reinvent","生き方を変える、刷新する"],["exponentially","飛躍的に、急激に"]];   // W[i] = [英単語, 日本語訳], 見出し番号 = i + 1
+const N = W.length;
+const KEY = 'kinphrase.v1';
+
+/* ---------- storage ---------- */
+let store = { lists: [{ id: 'weak', name: 'わからない単語', words: [] }],
+  last: { source: 'range', from: 1, to: 100, count: 20, order: 'random', listId: 'weak', removeKnown: false } };
+try {
+  const raw = localStorage.getItem(KEY);
+  if (raw) { const s = JSON.parse(raw);
+    if (s && Array.isArray(s.lists)) { store.lists = s.lists; store.last = Object.assign(store.last, s.last || {}); } }
+} catch (e) {}
+if (!store.lists.some(l => l.id === 'weak')) store.lists.unshift({ id: 'weak', name: 'わからない単語', words: [] });
+function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
+const getList = id => store.lists.find(l => l.id === id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const $ = s => document.querySelector(s);
+const main = $('#main');
+
+let tab = 'search';
+let toastTimer;
+function toast(msg) {
+  document.querySelectorAll('.toast').forEach(e => e.remove());
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t);
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.remove(), 1800);
+}
+function confirmBtn(btn, label, action) {   // 2回押して実行
+  const orig = btn.textContent; let armed = false, tm;
+  btn.addEventListener('click', () => {
+    if (!armed) { armed = true; btn.textContent = label; tm = setTimeout(() => { armed = false; btn.textContent = orig; }, 3000); }
+    else { clearTimeout(tm); action(); }
+  });
+}
+function addToList(listId, n) { const l = getList(listId); if (!l.words.includes(n)) { l.words.push(n); l.words.sort((a, b) => a - b); save(); } }
+function removeFromList(listId, n) { const l = getList(listId); l.words = l.words.filter(x => x !== n); save(); }
+const inAny = n => store.lists.some(l => l.words.includes(n));
+
+function wordRow(n, opts = {}) {
+  const [en, ja] = W[n - 1];
+  return `<div class="w"><div class="no">${n}</div><div><div class="en">${esc(en)}</div><div class="ja">${esc(ja)}</div></div>
+  <div class="acts">${opts.remove
+    ? `<button class="icon-btn" data-rm="${n}" aria-label="リストから外す"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>`
+    : `<button class="icon-btn" data-add="${n}" aria-label="リストに追加" aria-pressed="${inAny(n)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button>`}
+  </div></div>`;
+}
+
+function openAddSheet(n, after) {
+  const layer = $('#layer');
+  const draw = () => {
+    layer.innerHTML = `<div class="scrim" id="scrim"><div class="sheet" role="dialog" aria-label="リストに追加">
+      <div class="row"><div class="grow"><div class="lbl">リストに追加</div><div style="font-family:var(--font-en);font-weight:600;font-size:20px">${n}　${esc(W[n - 1][0])}</div></div>
+      <button class="btn small" id="sheetClose">閉じる</button></div>
+      <div class="chips">${store.lists.map(l => `<button class="chip" data-l="${l.id}" aria-pressed="${l.words.includes(n)}">${esc(l.name)}</button>`).join('')}</div>
+      <div class="note">押すと追加・解除できます。</div></div></div>`;
+    layer.querySelectorAll('[data-l]').forEach(b => b.onclick = () => {
+      const l = getList(b.dataset.l);
+      if (l.words.includes(n)) removeFromList(l.id, n); else addToList(l.id, n);
+      draw(); if (after) after();
+    });
+    $('#sheetClose').onclick = close;
+    $('#scrim').onclick = e => { if (e.target.id === 'scrim') close(); };
+  };
+  const close = () => { layer.innerHTML = ''; };
+  draw();
+}
+
+/* ---------- search ---------- */
+let sq = '', shown = 50;
+function searchResults(q) {
+  q = q.trim().toLowerCase();
+  if (!q) return { list: Array.from({ length: N }, (_, i) => i + 1), total: N };
+  const out = [], seen = new Set();
+  const push = n => { if (!seen.has(n)) { seen.add(n); out.push(n); } };
+  if (/^\d+$/.test(q) && +q >= 1 && +q <= N) push(+q);
+  const tier = [[], [], [], []];
+  W.forEach(([en, ja], i) => {
+    const e = en.toLowerCase();
+    if (e === q) tier[0].push(i + 1);
+    else if (e.startsWith(q)) tier[1].push(i + 1);
+    else if (e.includes(q)) tier[2].push(i + 1);
+    else if (ja.toLowerCase().includes(q)) tier[3].push(i + 1);
+  });
+  tier.forEach(t => t.forEach(push));
+  return { list: out, total: out.length };
+}
+function renderSearch() {
+  main.innerHTML = `<div class="bar"><h1>金のフレーズ<small>単語帳</small></h1></div>
+    <div class="field"><label for="q">英単語・日本語・見出し番号で検索</label>
+    <input id="q" type="search" inputmode="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="例: refer / 契約 / 250" value="${esc(sq)}"></div>
+    <div id="res" style="display:flex;flex-direction:column;gap:10px"></div>`;
+  const q = $('#q');
+  q.oninput = () => { sq = q.value; shown = 50; drawRes(); };
+  drawRes();
+}
+function drawRes() {
+  const { list, total } = searchResults(sq);
+  const box = $('#res');
+  if (!total) { box.innerHTML = `<div class="empty">「${esc(sq)}」は見つかりませんでした。<br>綴りを短くして試してください。</div>`; return; }
+  const slice = list.slice(0, shown);
+  box.innerHTML = `<div class="note count">${sq.trim() ? total + ' 件' : '全 ' + N + ' 語（番号順）'}</div>
+    <div class="words">${slice.map(n => wordRow(n)).join('')}</div>
+    ${list.length > shown ? `<button class="btn" id="more">さらに表示（残り ${list.length - shown}）</button>` : ''}`;
+  box.querySelectorAll('[data-add]').forEach(b => b.onclick = () => openAddSheet(+b.dataset.add, () => { b.setAttribute('aria-pressed', inAny(+b.dataset.add)); }));
+  const m = $('#more'); if (m) m.onclick = () => { shown += 50; drawRes(); };
+}
+
+/* ---------- test ---------- */
+let run = null;
+function poolFromSettings(s) {
+  if (s.source === 'list') { const l = getList(s.listId); return l ? l.words.slice() : []; }
+  const a = Math.max(1, Math.min(N, s.from)), b = Math.max(1, Math.min(N, s.to));
+  const lo = Math.min(a, b), hi = Math.max(a, b);
+  return Array.from({ length: hi - lo + 1 }, (_, i) => lo + i);
+}
+function renderTestSetup() {
+  const s = store.last;
+  main.innerHTML = `<div class="bar"><h1>単語テスト</h1></div>
+  <div class="field"><span class="lbl">出題元</span>
+    <div class="seg" id="src"><button data-v="range" aria-pressed="${s.source === 'range'}">番号の範囲</button><button data-v="list" aria-pressed="${s.source === 'list'}">リスト</button></div></div>
+  <div id="rangeBox" ${s.source === 'range' ? '' : 'hidden'} class="row">
+    <div class="field grow"><label for="from">開始番号</label><input id="from" type="number" inputmode="numeric" min="1" max="${N}" value="${s.from}"></div>
+    <div style="padding-top:22px">〜</div>
+    <div class="field grow"><label for="to">終了番号</label><input id="to" type="number" inputmode="numeric" min="1" max="${N}" value="${s.to}"></div></div>
+  <div id="listBox" ${s.source === 'list' ? '' : 'hidden'} class="field"><label for="lsel">リスト</label>
+    <select id="lsel">${store.lists.map(l => `<option value="${l.id}" ${l.id === s.listId ? 'selected' : ''}>${esc(l.name)}（${l.words.length}語）</option>`).join('')}</select></div>
+  <div class="field"><label for="cnt">問題数</label>
+    <div class="row"><input id="cnt" type="number" inputmode="numeric" min="1" value="${s.count}">
+    <div class="chips" id="cc">${[10, 20, 50].map(v => `<button class="chip" data-c="${v}">${v}</button>`).join('')}<button class="chip" data-c="all">全部</button></div></div></div>
+  <div class="field"><span class="lbl">出題順</span>
+    <div class="seg" id="ord"><button data-v="random" aria-pressed="${s.order === 'random'}">ランダム</button><button data-v="seq" aria-pressed="${s.order === 'seq'}">番号順</button></div></div>
+  <div id="rmBox" ${s.source === 'list' ? '' : 'hidden'}><label class="row" style="gap:10px"><input id="rmk" type="checkbox" ${s.removeKnown ? 'checked' : ''} style="width:20px;height:20px"><span>右スワイプ（わかった）の単語をリストから外す</span></label></div>
+  <div class="note" id="info"></div>
+  <button class="btn primary" id="go">テスト開始</button>
+  <div class="note">カードをタップで日本語訳を表示。右スワイプ＝わかった、左スワイプ＝わからない。左スワイプした単語は「わからない単語」リストに自動で保存されます。</div>`;
+  const read = () => {
+    s.from = +$('#from').value || 1; s.to = +$('#to').value || N; s.count = Math.max(1, +$('#cnt').value || 1);
+    s.listId = $('#lsel').value; s.removeKnown = $('#rmk').checked; save(); upd();
+  };
+  const upd = () => {
+    const p = poolFromSettings(s).length;
+    $('#info').textContent = p ? `対象 ${p} 語 ／ 出題 ${Math.min(s.count, p)} 問` : '出題できる単語がありません。';
+    $('#go').disabled = !p;
+  };
+  $('#src').onclick = e => { const b = e.target.closest('button'); if (!b) return; s.source = b.dataset.v; save(); renderTestSetup(); };
+  $('#ord').onclick = e => { const b = e.target.closest('button'); if (!b) return; s.order = b.dataset.v; save(); renderTestSetup(); };
+  ['from', 'to', 'cnt', 'lsel', 'rmk'].forEach(id => $('#' + id).addEventListener('input', read));
+  $('#cc').onclick = e => { const b = e.target.closest('button'); if (!b) return; const p = poolFromSettings(s).length;
+    $('#cnt').value = b.dataset.c === 'all' ? Math.max(1, p) : b.dataset.c; read(); };
+  $('#go').onclick = () => { read(); startRun(poolFromSettings(s), s); };
+  upd();
+}
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function startRun(pool, s, retry) {
+  let q = pool.slice();
+  if (!retry && s.order === 'random') shuffle(q);
+  if (retry) shuffle(q);
+  if (!retry) {
+    q = q.slice(0, Math.min(s.count, q.length));
+    if (s.order === 'seq') q.sort((a, b) => a - b);
+  }
+  run = { q, i: 0, known: [], unknown: [], hist: [], revealed: false, busy: false, fromList: s.source === 'list' ? s.listId : null, removeKnown: s.source === 'list' && s.removeKnown };
+  tab = 'test'; renderRun();
+}
+function renderRun() {
+  if (run.i >= run.q.length) return renderResult();
+  const n = run.q[run.i], [en, ja] = W[n - 1];
+  main.innerHTML = `<div class="stats"><button class="btn small" id="quit">やめる</button><div class="prog"><i style="width:${run.i / run.q.length * 100}%"></i></div><span>${run.i + 1} / ${run.q.length}</span></div>
+  <div class="stage"><div class="card" id="card" role="button" tabindex="0" aria-label="タップで日本語訳を表示">
+    <div class="ov r">◯</div><div class="ov l">✕</div>
+    <div class="cno">No.${n}</div><div class="cen">${esc(en)}</div>
+    <div class="cja" id="cja"><span class="tap">タップで日本語訳</span></div></div></div>
+  <div class="ans"><button class="btn no" id="bNo" aria-label="わからない">✕</button><button class="btn small" id="bUndo" ${run.hist.length ? '' : 'disabled'} aria-label="1つ戻す">戻す</button><button class="btn yes" id="bYes" aria-label="わかった">◯</button></div>`;
+  run.revealed = false;
+  const card = $('#card'), ovR = card.querySelector('.ov.r'), ovL = card.querySelector('.ov.l');
+  const flip = () => { run.revealed = !run.revealed;
+    $('#cja').innerHTML = run.revealed ? esc(ja) : '<span class="tap">タップで日本語訳</span>'; };
+  let sx = 0, dx = 0, moved = false, down = false;
+  card.onpointerdown = e => { down = true; moved = false; sx = e.clientX; dx = 0; card.setPointerCapture(e.pointerId); card.style.transition = 'none'; };
+  card.onpointermove = e => { if (!down) return; dx = e.clientX - sx; if (Math.abs(dx) > 8) moved = true;
+    card.style.transform = `translateX(${dx}px) rotate(${dx / 25}deg)`;
+    const k = Math.min(1, Math.abs(dx) / 110); ovR.style.opacity = dx > 0 ? k : 0; ovL.style.opacity = dx < 0 ? k : 0; };
+  const end = () => { if (!down) return; down = false; card.style.transition = '';
+    if (moved && Math.abs(dx) > 90) answer(dx > 0);
+    else { card.style.transform = ''; ovR.style.opacity = ovL.style.opacity = 0; if (!moved) flip(); } };
+  card.onpointerup = end;
+  card.onpointercancel = () => { down = false; card.style.transition = ''; card.style.transform = ''; ovR.style.opacity = ovL.style.opacity = 0; };
+  card.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); } };
+  $('#bNo').onclick = () => answer(false);
+  $('#bYes').onclick = () => answer(true);
+  $('#bUndo').onclick = undo;
+  $('#quit').onclick = () => { if (run.known.length + run.unknown.length) renderResult(true); else { run = null; renderTestSetup(); } };
+  card.focus({ preventScroll: true });
+}
+function answer(known) {
+  if (!run || run.busy) return; run.busy = true;
+  const card = $('#card'); const n = run.q[run.i];
+  card.style.transition = 'transform .2s ease'; card.style.transform = `translateX(${known ? 520 : -520}px) rotate(${known ? 18 : -18}deg)`;
+  setTimeout(() => {
+    run.hist.push({ n, known, removed: false, added: false });
+    const h = run.hist[run.hist.length - 1];
+    if (known) { run.known.push(n);
+      if (run.removeKnown && run.fromList && getList(run.fromList).words.includes(n)) { removeFromList(run.fromList, n); h.removed = true; } }
+    else { run.unknown.push(n); const w = getList('weak'); if (!w.words.includes(n)) { addToList('weak', n); h.added = true; } }
+    run.i++; run.busy = false; renderRun();
+  }, 190);
+}
+function undo() {
+  if (!run || !run.hist.length || run.busy) return;
+  const h = run.hist.pop();
+  if (h.known) { run.known.pop(); if (h.removed) addToList(run.fromList, h.n); }
+  else { run.unknown.pop(); if (h.added) removeFromList('weak', h.n); }
+  run.i--; renderRun();
+}
+function renderResult(early) {
+  const done = run.known.length + run.unknown.length, un = run.unknown.slice().sort((a, b) => a - b);
+  main.innerHTML = `<div class="bar"><h1>${early ? '結果（途中）' : '結果'}</h1></div>
+  <div class="sum"><div><div class="lbl">わかった</div><div class="big good">${run.known.length}</div></div><div><div class="lbl">わからない</div><div class="big bad">${un.length}</div></div></div>
+  <div class="note count">${done} 問中 ${done ? Math.round(run.known.length / done * 100) : 0}% 正解。わからなかった単語は「わからない単語」リストに保存済みです。</div>
+  ${un.length ? `<h2>わからなかった単語</h2><div class="words">${un.map(n => wordRow(n)).join('')}</div>` : '<div class="empty">全部わかりました。</div>'}
+  <div class="col" style="display:flex;flex-direction:column;gap:10px">
+  ${un.length ? '<button class="btn primary" id="again">わからなかった単語だけもう一度</button>' : ''}
+  <button class="btn" id="same">同じ設定でもう一度</button><button class="btn" id="back">設定にもどる</button></div>`;
+  main.querySelectorAll('[data-add]').forEach(b => b.onclick = () => openAddSheet(+b.dataset.add, () => b.setAttribute('aria-pressed', inAny(+b.dataset.add))));
+  const a = $('#again'); if (a) a.onclick = () => startRun(un, store.last, true);
+  $('#same').onclick = () => startRun(poolFromSettings(store.last), store.last);
+  $('#back').onclick = () => { run = null; renderTestSetup(); };
+}
+
+/* ---------- lists ---------- */
+let openList = null;
+function parseNums(t) {
+  const out = new Set();
+  t.split(/[\s,、，]+/).filter(Boolean).forEach(p => {
+    const m = p.match(/^(\d+)[-〜~ー](\d+)$/);
+    if (m) { let a = +m[1], b = +m[2]; if (a > b) [a, b] = [b, a]; for (let i = a; i <= b && i - a < 1000; i++) if (i >= 1 && i <= N) out.add(i); }
+    else if (/^\d+$/.test(p) && +p >= 1 && +p <= N) out.add(+p);
+  });
+  return [...out];
+}
+function renderLists() {
+  if (openList && !getList(openList)) openList = null;
+  if (!openList) {
+    main.innerHTML = `<div class="bar"><h1>リスト</h1></div>
+    <div class="col" style="display:flex;flex-direction:column;gap:10px">${store.lists.map(l => `<button class="lcard" data-id="${l.id}"><span class="nm">${esc(l.name)}</span><span class="ct">${l.words.length} 語</span></button>`).join('')}</div>
+    <div class="field"><label for="newName">新しいリストを作る</label><div class="row"><input id="newName" type="text" maxlength="30" placeholder="リスト名（例: 長文で間違えた単語）"><button class="btn primary" id="mk">作成</button></div></div>`;
+    main.querySelectorAll('[data-id]').forEach(b => b.onclick = () => { openList = b.dataset.id; renderLists(); });
+    const mk = () => { const v = $('#newName').value.trim(); if (!v) return toast('リスト名を入力してください');
+      const id = 'l' + Date.now().toString(36); store.lists.push({ id, name: v, words: [] }); save(); openList = id; renderLists(); };
+    $('#mk').onclick = mk; $('#newName').onkeydown = e => { if (e.key === 'Enter') mk(); };
+    return;
+  }
+  const l = getList(openList);
+  main.innerHTML = `<div class="row"><button class="btn small" id="back">‹ 戻る</button><h1 class="grow" style="overflow-wrap:anywhere">${esc(l.name)}</h1><span class="note count">${l.words.length} 語</span></div>
+  <button class="btn primary" id="test" ${l.words.length ? '' : 'disabled'}>このリストでテスト</button>
+  ${l.words.length ? `<div class="words">${l.words.map(n => wordRow(n, { remove: true })).join('')}</div>` : '<div class="empty">まだ単語がありません。検索画面のしおりボタンか、下の欄から番号で追加できます。</div>'}
+  <div class="field"><label for="nums">見出し番号で追加（例: 12 15 30-35）</label><div class="row"><input id="nums" type="text" inputmode="numeric" placeholder="番号をスペースかカンマで区切る"><button class="btn" id="addn">追加</button></div></div>
+  <div class="field"><label for="rn">リスト名を変更</label><div class="row"><input id="rn" type="text" maxlength="30" value="${esc(l.name)}"><button class="btn" id="rnb">変更</button></div></div>
+  <div class="row"><button class="btn danger grow" id="clr" ${l.words.length ? '' : 'disabled'}>単語を全部外す</button>${l.id === 'weak' ? '' : '<button class="btn danger grow" id="del">リストを削除</button>'}</div>`;
+  $('#back').onclick = () => { openList = null; renderLists(); };
+  $('#test').onclick = () => { Object.assign(store.last, { source: 'list', listId: l.id, count: Math.min(Math.max(store.last.count, 1), l.words.length) }); if (store.last.count < 1) store.last.count = 20; save(); tab = 'test'; run = null; draw(); };
+  main.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { removeFromList(l.id, +b.dataset.rm); renderLists(); });
+  const addn = () => { const ns = parseNums($('#nums').value); if (!ns.length) return toast('1〜' + N + ' の番号を入力してください');
+    ns.forEach(n => addToList(l.id, n)); renderLists(); toast(ns.length + ' 語を追加しました'); };
+  $('#addn').onclick = addn; $('#nums').onkeydown = e => { if (e.key === 'Enter') addn(); };
+  const rn = () => { const v = $('#rn').value.trim(); if (!v) return; l.name = v; save(); renderLists(); toast('名前を変更しました'); };
+  $('#rnb').onclick = rn;
+  confirmBtn($('#clr'), 'もう一度押すと全部外します', () => { l.words = []; save(); renderLists(); });
+  const d = $('#del'); if (d) confirmBtn(d, 'もう一度押すと削除します', () => { store.lists = store.lists.filter(x => x.id !== l.id); save(); openList = null; renderLists(); });
+}
+
+/* ---------- shell ---------- */
+function draw() {
+  document.querySelectorAll('.nav button').forEach(b => b.setAttribute('aria-current', b.dataset.tab === tab ? 'page' : 'false'));
+  main.scrollTop = 0;
+  if (tab === 'search') renderSearch();
+  else if (tab === 'lists') renderLists();
+  else if (run) renderRun(); else renderTestSetup();
+}
+document.querySelectorAll('.nav button').forEach(b => b.onclick = () => { tab = b.dataset.tab; if (tab === 'lists') openList = null; draw(); });
+draw();
+</script>
