@@ -1,4 +1,4 @@
-<title>金のフレーズ 単語帳</title>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#f2f5f7"></head><body><title>金のフレーズ 単語帳</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap">
 <style>
 /* Layout: one-screen phone app. Scrolling content area above a bottom tab bar; the test card fills the middle. */
@@ -19,13 +19,13 @@
   --good:#4cc38a; --good-soft:#15291f; --bad:#ef7a67; --bad-soft:#321b17; color-scheme:dark}
 
 *{box-sizing:border-box}
-html,body{height:100%}
-body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.55;-webkit-tap-highlight-color:transparent;overflow:hidden}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.55;-webkit-tap-highlight-color:transparent;overflow:hidden;touch-action:manipulation;-webkit-text-size-adjust:100%}
 button,input,select{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-#app{height:100%;display:flex;flex-direction:column;max-width:560px;margin:0 auto}
-#main{flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px;overscroll-behavior:contain}
+#app{position:fixed;top:0;bottom:0;left:0;right:0;width:100%;max-width:560px;margin:0 auto;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
+#main{flex:1;min-height:0;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px;overscroll-behavior:contain}
 .bar{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
 h1{font-size:19px;margin:0;font-weight:700;letter-spacing:.02em}
 h1 small{font-size:12px;font-weight:500;color:var(--muted);margin-left:8px}
@@ -249,7 +249,7 @@ function renderTestSetup() {
   <div id="rmBox" ${s.source === 'list' ? '' : 'hidden'}><label class="row" style="gap:10px"><input id="rmk" type="checkbox" ${s.removeKnown ? 'checked' : ''} style="width:20px;height:20px"><span>右スワイプ（わかった）の単語をリストから外す</span></label></div>
   <div class="note" id="info"></div>
   <button class="btn primary" id="go">テスト開始</button>
-  <div class="note">カードをタップで日本語訳を表示。右スワイプ＝わかった、左スワイプ＝わからない。左スワイプした単語は「わからない単語」リストに自動で保存されます。</div>`;
+  <div class="note" style="text-align:center">タップで訳を表示 ／ 右＝◯ 左＝✕（✕は自動で保存）</div>`;
   const read = () => {
     s.from = +$('#from').value || 1; s.to = +$('#to').value || N; s.count = Math.max(1, +$('#cnt').value || 1);
     s.listId = $('#lsel').value; s.removeKnown = $('#rmk').checked; save(); upd();
@@ -396,4 +396,6 @@ function draw() {
 }
 document.querySelectorAll('.nav button').forEach(b => b.onclick = () => { tab = b.dataset.tab; if (tab === 'lists') openList = null; draw(); });
 draw();
-</script>
+/* ピンチ・ダブルタップによる拡大を無効化 */
+[
+</body></html>
