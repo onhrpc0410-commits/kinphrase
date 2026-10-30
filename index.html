@@ -340,7 +340,7 @@ function renderTestSetup() {
   <div id="rmBox" ${s.source === 'list' ? '' : 'hidden'}><label class="row" style="gap:10px"><input id="rmk" type="checkbox" ${s.removeKnown ? 'checked' : ''} style="width:20px;height:20px"><span>右スワイプ（わかった）の単語をリストから外す</span></label></div>
   <div class="note" id="info"></div>
   <button class="btn primary" id="go">テスト開始</button>
-  <div class="note" style="text-align:center">タップで訳を表示 ／ 右＝◯ 左＝✕（✕は自動で保存）</div>`;
+  <div class="note" style="text-align:center">触れると訳を表示、そのままスワイプ ／ 右＝◯ 左＝✕（✕は自動で保存）</div>`;
   const read = () => {
     s.from = +$('#from').value || mn(d); s.to = +$('#to').value || mx(d); s.count = Math.max(1, +$('#cnt').value || 1);
     s.listId = $('#lsel').value; s.removeKnown = $('#rmk').checked; save(); upd();
@@ -374,26 +374,25 @@ function renderRun() {
   if (run.i >= run.q.length) return renderResult();
   const n = run.q[run.i], [en, ja] = G(n, run.deck);
   main.innerHTML = `<div class="stats"><button class="btn small" id="quit">やめる</button><div class="prog"><i style="width:${run.i / run.q.length * 100}%"></i></div><span>${run.i + 1} / ${run.q.length}</span></div>
-  <div class="stage"><div class="card" id="card" role="button" tabindex="0" aria-label="タップで日本語訳を表示">
+  <div class="stage"><div class="card" id="card" role="button" tabindex="0" aria-label="触れると日本語訳を表示">
     <div class="ov r">◯</div><div class="ov l">✕</div>
     <div class="cno">No.${n}</div><div class="cen">${esc(en)}</div>
-    <div class="cja" id="cja"><span class="tap">タップで日本語訳</span></div></div></div>
+    <div class="cja" id="cja"><span class="tap">触れると日本語訳</span></div></div></div>
   <div class="ans"><button class="btn no" id="bNo" aria-label="わからない">✕</button><button class="btn small" id="bUndo" ${run.hist.length ? '' : 'disabled'} aria-label="1つ戻す">戻す</button><button class="btn yes" id="bYes" aria-label="わかった">◯</button></div>`;
   run.revealed = false;
   const card = $('#card'), ovR = card.querySelector('.ov.r'), ovL = card.querySelector('.ov.l');
-  const flip = () => { run.revealed = !run.revealed;
-    $('#cja').innerHTML = run.revealed ? esc(ja) : '<span class="tap">タップで日本語訳</span>'; };
+  const reveal = () => { if (run.revealed) return; run.revealed = true; $('#cja').innerHTML = esc(ja); };
   let sx = 0, dx = 0, moved = false, down = false;
-  card.onpointerdown = e => { down = true; moved = false; sx = e.clientX; dx = 0; card.setPointerCapture(e.pointerId); card.style.transition = 'none'; };
+  card.onpointerdown = e => { reveal(); down = true; moved = false; sx = e.clientX; dx = 0; card.setPointerCapture(e.pointerId); card.style.transition = 'none'; };
   card.onpointermove = e => { if (!down) return; dx = e.clientX - sx; if (Math.abs(dx) > 8) moved = true;
     card.style.transform = `translateX(${dx}px) rotate(${dx / 25}deg)`;
     const k = Math.min(1, Math.abs(dx) / 110); ovR.style.opacity = dx > 0 ? k : 0; ovL.style.opacity = dx < 0 ? k : 0; };
   const end = () => { if (!down) return; down = false; card.style.transition = '';
     if (moved && Math.abs(dx) > 90) answer(dx > 0);
-    else { card.style.transform = ''; ovR.style.opacity = ovL.style.opacity = 0; if (!moved) flip(); } };
+    else { card.style.transform = ''; ovR.style.opacity = ovL.style.opacity = 0; } };
   card.onpointerup = end;
   card.onpointercancel = () => { down = false; card.style.transition = ''; card.style.transform = ''; ovR.style.opacity = ovL.style.opacity = 0; };
-  card.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); } };
+  card.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); reveal(); } };
   $('#bNo').onclick = () => answer(false);
   $('#bYes').onclick = () => answer(true);
   $('#bUndo').onclick = undo;
