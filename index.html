@@ -80,7 +80,7 @@ input::placeholder{color:var(--muted)}
 .prog{flex:1;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
 .prog i{display:block;height:100%;background:var(--accent);width:0;transition:width .2s}
 .stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:6px 0}
-.card{position:relative;width:100%;max-height:100%;min-height:min(60vh,380px);background:var(--surface);border:1px solid var(--line);border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:28px 20px;text-align:center;touch-action:pan-y;user-select:none;-webkit-user-select:none;transition:transform .2s ease;box-shadow:0 6px 24px rgba(0,0,0,.06)}
+.card{position:relative;width:100%;max-height:100%;min-height:min(60vh,380px);background:var(--surface);border:1px solid var(--line);border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:28px 20px;text-align:center;touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;transition:transform .2s ease;box-shadow:0 6px 24px rgba(0,0,0,.06)}
 .card .cno{position:absolute;top:14px;left:16px;font-size:13px;font-weight:700;color:var(--accent-ink);font-variant-numeric:tabular-nums}
 .card .cen{font-family:var(--font-en);font-weight:600;font-size:clamp(34px,11vw,52px);line-height:1.15;overflow-wrap:anywhere}
 .card .cja{font-size:20px;font-weight:500;line-height:1.6;min-height:3.2em;display:flex;align-items:center;justify-content:center}
@@ -340,7 +340,7 @@ function renderTestSetup() {
   <div id="rmBox" ${s.source === 'list' ? '' : 'hidden'}><label class="row" style="gap:10px"><input id="rmk" type="checkbox" ${s.removeKnown ? 'checked' : ''} style="width:20px;height:20px"><span>右スワイプ（わかった）の単語をリストから外す</span></label></div>
   <div class="note" id="info"></div>
   <button class="btn primary" id="go">テスト開始</button>
-  <div class="note" style="text-align:center">触れると訳を表示、そのままスワイプ ／ 右＝◯ 左＝✕（✕は自動で保存）</div>`;
+  <div class="note" style="text-align:center">触れている間だけ訳を表示、そのままスワイプ ／ 右＝◯ 左＝✕（✕は自動で保存）</div>`;
   const read = () => {
     s.from = +$('#from').value || mn(d); s.to = +$('#to').value || mx(d); s.count = Math.max(1, +$('#cnt').value || 1);
     s.listId = $('#lsel').value; s.removeKnown = $('#rmk').checked; save(); upd();
@@ -377,11 +377,12 @@ function renderRun() {
   <div class="stage"><div class="card" id="card" role="button" tabindex="0" aria-label="触れると日本語訳を表示">
     <div class="ov r">◯</div><div class="ov l">✕</div>
     <div class="cno">No.${n}</div><div class="cen">${esc(en)}</div>
-    <div class="cja" id="cja"><span class="tap">触れると日本語訳</span></div></div></div>
+    <div class="cja" id="cja"><span class="tap">触れている間 日本語訳</span></div></div></div>
   <div class="ans"><button class="btn no" id="bNo" aria-label="わからない">✕</button><button class="btn small" id="bUndo" ${run.hist.length ? '' : 'disabled'} aria-label="1つ戻す">戻す</button><button class="btn yes" id="bYes" aria-label="わかった">◯</button></div>`;
   run.revealed = false;
   const card = $('#card'), ovR = card.querySelector('.ov.r'), ovL = card.querySelector('.ov.l');
-  const reveal = () => { if (run.revealed) return; run.revealed = true; $('#cja').innerHTML = esc(ja); };
+  const reveal = () => { run.revealed = true; $('#cja').innerHTML = esc(ja); };
+  const hide = () => { run.revealed = false; $('#cja').innerHTML = '<span class="tap">触れている間 日本語訳</span>'; };
   let sx = 0, dx = 0, moved = false, down = false;
   card.onpointerdown = e => { reveal(); down = true; moved = false; sx = e.clientX; dx = 0; card.setPointerCapture(e.pointerId); card.style.transition = 'none'; };
   card.onpointermove = e => { if (!down) return; dx = e.clientX - sx; if (Math.abs(dx) > 8) moved = true;
@@ -389,10 +390,12 @@ function renderRun() {
     const k = Math.min(1, Math.abs(dx) / 110); ovR.style.opacity = dx > 0 ? k : 0; ovL.style.opacity = dx < 0 ? k : 0; };
   const end = () => { if (!down) return; down = false; card.style.transition = '';
     if (moved && Math.abs(dx) > 90) answer(dx > 0);
-    else { card.style.transform = ''; ovR.style.opacity = ovL.style.opacity = 0; } };
+    else { card.style.transform = ''; ovR.style.opacity = ovL.style.opacity = 0; hide(); } };
   card.onpointerup = end;
-  card.onpointercancel = () => { down = false; card.style.transition = ''; card.style.transform = ''; ovR.style.opacity = ovL.style.opacity = 0; };
+  card.oncontextmenu = e => e.preventDefault();
+  card.onpointercancel = () => { down = false; hide(); card.style.transition = ''; card.style.transform = ''; ovR.style.opacity = ovL.style.opacity = 0; };
   card.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); reveal(); } };
+  card.onkeyup = e => { if (e.key === 'Enter' || e.key === ' ') hide(); };
   $('#bNo').onclick = () => answer(false);
   $('#bYes').onclick = () => answer(true);
   $('#bUndo').onclick = undo;
